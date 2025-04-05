@@ -1,0 +1,40 @@
+[gd_scene load_steps=3 format=3 uid="uid://yin4a6ky80w3"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ynm24"]
+bg_color = Color(0.199058, 0.606892, 0.457894, 1)
+
+[sub_resource type="GDScript" id="GDScript_yds0a"]
+resource_name = "CountdownProgressBar"
+script/source = "extends ProgressBar
+
+signal countdown_finished
+var timer: Timer = Timer.new()
+
+func _ready():
+	add_child(timer)
+	self.value = 100
+
+func start_countdown(duration: float, callback: Callable = Callable()):
+	timer.wait_time = duration
+	timer.start()
+	self.value = 100
+	var tween = create_tween()
+	tween.tween_property(self, \"value\", 0, duration)
+	
+	# Await Timer timeout and trigger callback if set
+	await timer.timeout
+	countdown_finished.emit()
+	if callback.is_valid():
+		callback.call()
+
+func start_countdown_await(duration: float) -> void:
+	await start_countdown(duration)
+"
+
+[node name="CountdownProgressBar" type="ProgressBar"]
+offset_right = 1000.0
+offset_bottom = 50.0
+theme_override_styles/fill = SubResource("StyleBoxFlat_ynm24")
+value = 30.0
+show_percentage = false
+script = SubResource("GDScript_yds0a")

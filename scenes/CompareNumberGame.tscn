@@ -1,0 +1,231 @@
+[gd_scene load_steps=11 format=3 uid="uid://cbrnpyqat2fqn"]
+
+[ext_resource type="PackedScene" uid="uid://dpvbyb12sjmqc" path="res://scenes/Components/BackButton.tscn" id="1_jttyy"]
+[ext_resource type="Theme" uid="uid://dsff7y27w8exb" path="res://assets/UI/themes/button_blue.tres" id="2_xlf2q"]
+[ext_resource type="Script" uid="uid://cgnu8hckh7vyx" path="res://scripts/NavigationButton.gd" id="3_48pyl"]
+[ext_resource type="FontFile" uid="uid://dga3pu5c2jg31" path="res://assets/fonts/m6x11plus.ttf" id="4_qtpxd"]
+[ext_resource type="Theme" uid="uid://cwakmtcbo5cl1" path="res://assets/UI/themes/button_red.tres" id="5_vnd03"]
+[ext_resource type="PackedScene" uid="uid://dkc1te60k31y6" path="res://scenes/Components/SubmitButton.tscn" id="8_lm158"]
+[ext_resource type="PackedScene" uid="uid://y6wnrjhcbwrv" path="res://scenes/Components/QuestionCount.tscn" id="9_ese6p"]
+[ext_resource type="PackedScene" uid="uid://4njrw7dnp1l" path="res://scenes/Components/ResultPanel.tscn" id="10_6xy1x"]
+
+[sub_resource type="GDScript" id="GDScript_jttyy"]
+resource_name = "CompareNumberGame"
+script/source = "extends Control
+
+@export_category(\"Game Settings\")
+@export var min_number : int = 0
+@export var max_number : int = 10
+@export var total_question : int = 5
+@export var waiting_time_between_questions : float = 5.0
+
+@export_category(\"Interactions\")
+@export var number1_button : Button
+@export var number2_button : Button
+@export var answer_button_group : ButtonGroup
+@export var submit_button : Button
+@export var result_panel : Container
+@export var question_label : Label
+
+@export_category(\"Scenes\")
+@export_file(\"*.tscn\") var game_done_scene : String
+
+var current_question = 0
+var number1 = -1
+var number2 = -1
+
+func _ready():
+	# Buttons setup
+	answer_button_group.pressed.connect(
+		func(_button):
+			submit_button.disabled = false
+	)
+	
+	# Label setup
+	question_label.total_question = total_question
+
+	# Start game
+	generate_question()
+
+func generate_question():
+	current_question += 1
+	question_label.current_question = current_question
+	
+	var numbers = generate_random_numbers()
+	var num1 = numbers[0]
+	var num2 = numbers[1]
+	
+	if (number1 == num1 and number2 == num2)\\
+		or (number1 == num2 and number2 == num1):
+		numbers = generate_random_numbers()
+		num1 = numbers[0]
+		num2 = numbers[1]
+
+	number1 = num1
+	number2 = num2
+	number1_button.text = str(number1)
+	number2_button.text = str(number2)
+
+func generate_random_numbers() -> Array[int]:
+	var num1 = randi_range(min_number, max_number)
+	var num2 = randi_range(min_number, max_number)
+
+	# Ensure numbers are not the same
+	while num1 == num2:
+		num2 = randi_range(min_number, max_number)
+
+	return [num1, num2]
+
+func check_result(num1, num2) -> void:
+	if num1 > num2:
+		result_panel.text = \"✅ Correct!\"
+	else:
+		result_panel.text = \"❌ Try Again!\"
+
+func _on_submit_button_pressed() -> void:
+	var buttons = answer_button_group.get_buttons()
+	buttons.append(submit_button)
+
+	for button in buttons:
+		button.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var pressed_button = answer_button_group.get_pressed_button()
+	if not pressed_button:
+		return
+	if \"GreaterButton\".nocasecmp_to(pressed_button.name) == 0:
+		check_result(number1, number2)
+	else:
+		check_result(number2, number1)
+	result_panel.animate_up()
+
+func _on_results_panel_continue_pressed() -> void:
+	if current_question >= total_question:
+		get_tree().change_scene_to_file(game_done_scene)
+		return
+	else:
+		var buttons = answer_button_group.get_buttons()
+		buttons.append(submit_button)
+		for button in buttons:
+			button.mouse_filter = Control.MOUSE_FILTER_STOP
+		var pressed_button = answer_button_group.get_pressed_button()
+		if pressed_button:
+			pressed_button.button_pressed = false
+		submit_button.disabled = true
+		result_panel.animate_down()
+		generate_question()
+"
+
+[sub_resource type="ButtonGroup" id="ButtonGroup_4xswm"]
+resource_name = "ChoicesButton"
+
+[node name="CompareNumberGame" type="Control" node_paths=PackedStringArray("number1_button", "number2_button", "submit_button", "result_panel", "question_label")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_jttyy")
+number1_button = NodePath("VBoxContainer/Numbers/Number1")
+number2_button = NodePath("VBoxContainer/Numbers/Number2")
+answer_button_group = SubResource("ButtonGroup_4xswm")
+submit_button = NodePath("VBoxContainer/SubmitButton")
+result_panel = NodePath("ResultsPanel")
+question_label = NodePath("QuestionCount")
+game_done_scene = "uid://dtrqi17ipsnkf"
+
+[node name="Back_Button" parent="." instance=ExtResource("1_jttyy")]
+layout_mode = 1
+script = ExtResource("3_48pyl")
+target_scene = "uid://dtrqi17ipsnkf"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.2
+anchor_top = 0.2
+anchor_right = 0.8
+anchor_bottom = 0.9
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 15
+
+[node name="Numbers" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 25
+alignment = 1
+
+[node name="Number1" type="Button" parent="VBoxContainer/Numbers"]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+focus_mode = 0
+theme = ExtResource("2_xlf2q")
+theme_override_font_sizes/font_size = 36
+
+[node name="Label" type="Label" parent="VBoxContainer/Numbers"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("4_qtpxd")
+theme_override_font_sizes/font_size = 36
+text = "is ____ than"
+
+[node name="Number2" type="Button" parent="VBoxContainer/Numbers"]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+focus_mode = 0
+theme = ExtResource("2_xlf2q")
+theme_override_font_sizes/font_size = 36
+
+[node name="Choices" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 3
+theme_override_constants/separation = 50
+alignment = 1
+
+[node name="GreaterButton" type="Button" parent="VBoxContainer/Choices"]
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+size_flags_horizontal = 5
+focus_mode = 0
+theme = ExtResource("5_vnd03")
+theme_override_font_sizes/font_size = 36
+toggle_mode = true
+button_group = SubResource("ButtonGroup_4xswm")
+text = "Greater"
+
+[node name="LesserButton" type="Button" parent="VBoxContainer/Choices"]
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+size_flags_horizontal = 5
+focus_mode = 0
+theme = ExtResource("5_vnd03")
+theme_override_font_sizes/font_size = 36
+toggle_mode = true
+button_group = SubResource("ButtonGroup_4xswm")
+text = "Lesser"
+
+[node name="SubmitButton" parent="VBoxContainer" instance=ExtResource("8_lm158")]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 36
+disabled = true
+
+[node name="ResultsPanel" parent="." instance=ExtResource("10_6xy1x")]
+layout_mode = 1
+
+[node name="QuestionCount" parent="." instance=ExtResource("9_ese6p")]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.95
+anchor_top = 0.05
+anchor_right = 0.95
+anchor_bottom = 0.05
+offset_bottom = 0.0
+
+[connection signal="pressed" from="VBoxContainer/SubmitButton" to="." method="_on_submit_button_pressed"]
+[connection signal="continue_pressed" from="ResultsPanel" to="." method="_on_results_panel_continue_pressed"]

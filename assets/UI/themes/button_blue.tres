@@ -1,0 +1,52 @@
+[gd_resource type="Theme" load_steps=9 format=3 uid="uid://dsff7y27w8exb"]
+
+[ext_resource type="FontFile" uid="uid://dga3pu5c2jg31" path="res://assets/fonts/m6x11plus.ttf" id="1_cwwyy"]
+[ext_resource type="Texture2D" uid="uid://d4c45d4l5qbtl" path="res://assets/UI/kenney_pixel-ui-pack/9-Slice/Colored/blue.png" id="2_okug2"]
+[ext_resource type="Texture2D" uid="uid://3ut06jnnfe88" path="res://assets/UI/kenney_pixel-ui-pack/9-Slice/Colored/blue_pressed.png" id="3_eskw6"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_8oyyf"]
+texture = ExtResource("2_okug2")
+region_rect = Rect2(0, 0, 48, 48)
+modulate_color = Color(0.627451, 0.847059, 0.901961, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_cwwyy"]
+texture = ExtResource("2_okug2")
+modulate_color = Color(0.101961, 0.545098, 0.721569, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_q1lin"]
+texture = ExtResource("2_okug2")
+modulate_color = Color(0.176471, 0.729412, 0.901961, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_6ufhd"]
+texture = ExtResource("2_okug2")
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_difqk"]
+texture = ExtResource("3_eskw6")
+modulate_color = Color(0.101961, 0.545098, 0.721569, 1)
+
+[resource]
+default_font_size = 54
+Button/colors/font_color = Color(1, 1, 1, 1)
+Button/colors/font_disabled_color = Color(0.690196, 0.690196, 0.690196, 1)
+Button/colors/font_focus_color = Color(0.878431, 0.968627, 1, 1)
+Button/colors/font_hover_color = Color(0.878431, 0.968627, 1, 1)
+Button/colors/font_hover_pressed_color = Color(0.690196, 0.901961, 1, 1)
+Button/colors/font_outline_color = Color(0, 0, 0, 1)
+Button/colors/font_pressed_color = Color(0.690196, 0.901961, 1, 1)
+Button/colors/icon_disabled_color = Color(1, 1, 1, 0.4)
+Button/colors/icon_focus_color = Color(1, 1, 1, 1)
+Button/colors/icon_hover_color = Color(1, 1, 1, 1)
+Button/colors/icon_hover_pressed_color = Color(1, 1, 1, 1)
+Button/colors/icon_normal_color = Color(1, 1, 1, 1)
+Button/colors/icon_pressed_color = Color(1, 1, 1, 1)
+Button/constants/align_to_largest_stylebox = 0
+Button/constants/h_separation = 4
+Button/constants/icon_max_width = 0
+Button/constants/outline_size = 0
+Button/font_sizes/font_size = 54
+Button/fonts/font = ExtResource("1_cwwyy")
+Button/styles/disabled = SubResource("StyleBoxTexture_8oyyf")
+Button/styles/focus = SubResource("StyleBoxTexture_cwwyy")
+Button/styles/hover = SubResource("StyleBoxTexture_q1lin")
+Button/styles/normal = SubResource("StyleBoxTexture_6ufhd")
+Button/styles/pressed = SubResource("StyleBoxTexture_difqk")

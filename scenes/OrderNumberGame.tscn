@@ -1,0 +1,213 @@
+[gd_scene load_steps=10 format=3 uid="uid://cyxrrja1mm1wo"]
+
+[ext_resource type="FontFile" uid="uid://dga3pu5c2jg31" path="res://assets/fonts/m6x11plus.ttf" id="2_gcd3p"]
+[ext_resource type="PackedScene" uid="uid://dpvbyb12sjmqc" path="res://scenes/Components/BackButton.tscn" id="2_xp34x"]
+[ext_resource type="Script" uid="uid://cgnu8hckh7vyx" path="res://scripts/NavigationButton.gd" id="3_ftotg"]
+[ext_resource type="Script" uid="uid://ddke16pywrhcg" path="res://scripts/addons/addons/ReorderableContainer/reorderable_hbox.gd" id="5_ftotg"]
+[ext_resource type="Theme" uid="uid://dsff7y27w8exb" path="res://assets/UI/themes/button_blue.tres" id="6_26scm"]
+[ext_resource type="PackedScene" uid="uid://dkc1te60k31y6" path="res://scenes/Components/SubmitButton.tscn" id="7_3awgx"]
+[ext_resource type="PackedScene" uid="uid://4njrw7dnp1l" path="res://scenes/Components/ResultPanel.tscn" id="8_26scm"]
+[ext_resource type="PackedScene" uid="uid://y6wnrjhcbwrv" path="res://scenes/Components/QuestionCount.tscn" id="9_3awgx"]
+
+[sub_resource type="GDScript" id="GDScript_mely6"]
+resource_name = "OrderNumberGame"
+script/source = "extends Control
+
+enum ORDER {ASCENDING, DESCENDING, RANDOM}
+
+@export_category(\"Game Settings\")
+@export var min_number = 0
+@export var max_number = 10
+@export var order : ORDER = ORDER.RANDOM
+@export var total_question : int = 5
+
+@export_category(\"Controls\")
+@export var number_list : Control
+@export var order_label : Label
+@export var result_panel : Container
+@export var question_label : Label
+
+var question_order : ORDER = ORDER.ASCENDING
+var current_question : int = 0
+
+func _ready():
+	question_label.total_question = total_question
+	generate_question()
+
+func generate_question():
+	current_question += 1
+	question_label.current_question = current_question
+	var numbers = []
+
+	for button in number_list.find_children(\"*\", \"Button\"):
+		var random_number = randi_range(min_number, max_number)
+		while random_number in numbers:
+			random_number = randi_range(min_number, max_number)
+		numbers.append(random_number)
+
+		button.text = str(random_number)
+
+	if order == ORDER.RANDOM:
+		question_order = ORDER.ASCENDING if randi() % 2 == 0 else ORDER.DESCENDING
+
+	if question_order == ORDER.ASCENDING:
+		order_label.text = \"ASCENDING\"
+		order_label.add_theme_color_override(\"font_color\", Color(0.85, 0.1, 0.1))
+	else:
+		order_label.text = \"DESCENDING\"
+		order_label.add_theme_color_override(\"font_color\", Color(0.1, 0.4, 0.9))
+	order_label.text += \" ORDER\"
+
+func _on_Submit_Button_pressed() -> void:
+	check_result()
+	result_panel.animate_up()
+
+func check_result():
+	var current_order = []
+
+	for button in number_list.find_children(\"*\", \"Button\"):
+		current_order.append(int(button.text))
+
+	var correct_order = current_order.duplicate(true)
+
+	if question_order == ORDER.ASCENDING:
+		correct_order.sort()  # Sort in ascending order
+	elif question_order == ORDER.DESCENDING:
+		correct_order.sort()
+		correct_order.reverse()  # Sort in descending order
+
+	if current_order == correct_order:
+		result_panel.text = \"✅ Correct!\"
+	else:
+		result_panel.text = \"❌ Try Again!\"
+
+func _on_results_panel_continue_pressed() -> void:
+	if current_question >= total_question:
+		get_tree().change_scene_to_file(\"res://scenes/MainMenu.tscn\")
+	else:
+		generate_question()
+		result_panel.animate_down()
+"
+
+[node name="OrderNumberGame" type="Control" node_paths=PackedStringArray("number_list", "order_label", "result_panel", "question_label")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_mely6")
+number_list = NodePath("AspectRatioContainer/ReorderableHBox")
+order_label = NodePath("HBoxContainer/OrderLabel")
+result_panel = NodePath("ResultsPanel")
+question_label = NodePath("QuestionCount")
+
+[node name="Background" type="TextureRect" parent="."]
+clip_contents = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Back_Button" parent="." instance=ExtResource("2_xp34x")]
+layout_mode = 1
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("3_ftotg")
+target_scene = "uid://dtrqi17ipsnkf"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.2
+anchor_top = 0.1
+anchor_right = 0.8
+anchor_bottom = 0.1
+grow_horizontal = 2
+theme_override_constants/separation = 15
+alignment = 1
+
+[node name="Instruction" type="Label" parent="HBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_gcd3p")
+theme_override_font_sizes/font_size = 36
+text = "Sort the numbers in"
+
+[node name="OrderLabel" type="Label" parent="HBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_gcd3p")
+theme_override_font_sizes/font_size = 36
+text = "the order"
+
+[node name="AspectRatioContainer" type="AspectRatioContainer" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.2
+anchor_top = 0.3
+anchor_right = 0.8
+anchor_bottom = 0.5
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="ReorderableHBox" type="Container" parent="AspectRatioContainer"]
+process_mode = 1
+custom_minimum_size = Vector2(430, 100)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+script = ExtResource("5_ftotg")
+hold_duration = 0.1
+speed = 15.0
+metadata/_custom_type_script = "uid://ddke16pywrhcg"
+
+[node name="Number1" type="Button" parent="AspectRatioContainer/ReorderableHBox"]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 2
+focus_mode = 0
+mouse_filter = 1
+theme = ExtResource("6_26scm")
+
+[node name="Number2" type="Button" parent="AspectRatioContainer/ReorderableHBox"]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 2
+focus_mode = 0
+mouse_filter = 1
+theme = ExtResource("6_26scm")
+
+[node name="Number3" type="Button" parent="AspectRatioContainer/ReorderableHBox"]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 2
+focus_mode = 0
+mouse_filter = 1
+theme = ExtResource("6_26scm")
+
+[node name="Number4" type="Button" parent="AspectRatioContainer/ReorderableHBox"]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 2
+focus_mode = 0
+mouse_filter = 1
+theme = ExtResource("6_26scm")
+
+[node name="SubmitButton" parent="." instance=ExtResource("7_3awgx")]
+layout_mode = 1
+
+[node name="ResultsPanel" parent="." instance=ExtResource("8_26scm")]
+layout_mode = 1
+grow_horizontal = 1
+
+[node name="QuestionCount" parent="." instance=ExtResource("9_3awgx")]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.95
+anchor_top = 0.05
+anchor_right = 0.95
+anchor_bottom = 0.05
+offset_bottom = 0.0
+
+[connection signal="sort_children" from="AspectRatioContainer/ReorderableHBox" to="AspectRatioContainer/ReorderableHBox" method="_on_sort_children"]
+[connection signal="pressed" from="SubmitButton" to="." method="_on_Submit_Button_pressed"]
+[connection signal="continue_pressed" from="ResultsPanel" to="." method="_on_results_panel_continue_pressed"]

@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3 uid="uid://drhwxvux0k4po"]
+
+[ext_resource type="Texture2D" uid="uid://c2f324m26sfs4" path="res://assets/UI/kenney_pixel-ui-pack/9-Slice/space_inlay.png" id="1_5spvj"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_uxqvu"]
+atlas = ExtResource("1_5spvj")
+
+[node name="DropTarget" type="TextureRect"]
+custom_minimum_size = Vector2(75, 75)
+texture = SubResource("AtlasTexture_uxqvu")

@@ -1,0 +1,16 @@
+[gd_scene load_steps=2 format=3 uid="uid://dkc1te60k31y6"]
+
+[ext_resource type="Theme" uid="uid://b71hcsshbr0ht" path="res://assets/UI/themes/button_green.tres" id="1_qxiw8"]
+
+[node name="SubmitButton" type="Button"]
+custom_minimum_size = Vector2(225, 75)
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 0.8
+anchor_right = 0.5
+anchor_bottom = 0.8
+grow_horizontal = 2
+grow_vertical = 2
+focus_mode = 0
+theme = ExtResource("1_qxiw8")
+text = "Submit"

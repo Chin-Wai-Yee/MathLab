@@ -1,0 +1,215 @@
+[gd_scene load_steps=11 format=3 uid="uid://dtrqi17ipsnkf"]
+
+[ext_resource type="Texture2D" uid="uid://cphkgt37axe0o" path="res://assets/images/background.jpg" id="1_826wr"]
+[ext_resource type="FontFile" uid="uid://dga3pu5c2jg31" path="res://assets/fonts/m6x11plus.ttf" id="1_l72w3"]
+[ext_resource type="Theme" uid="uid://c7foxj0f51j5x" path="res://assets/UI/themes/button.tres" id="2_826wr"]
+[ext_resource type="Script" uid="uid://74v81lnahn5y" path="res://scripts/ExitButton.gd" id="3_ucygd"]
+[ext_resource type="PackedScene" uid="uid://dpvbyb12sjmqc" path="res://scenes/Components/BackButton.tscn" id="4_mipys"]
+[ext_resource type="Script" uid="uid://cgnu8hckh7vyx" path="res://scripts/NavigationButton.gd" id="5_8a8k8"]
+
+[sub_resource type="GDScript" id="GDScript_826wr"]
+resource_name = "MainMenu"
+script/source = "extends Control
+
+@export var MainOptionsMenu: Control
+@export var GameOptionsMenu: Control
+
+func _ready() -> void:
+	if (not GameOptionsMenu or not MainOptionsMenu):
+		print(\"The options menu doesn't exist!\")
+		get_tree().quit()
+
+func _on_exit_button_pressed() -> void:
+	get_tree().quit()
+
+func _on_play_button_pressed() -> void:
+	MainOptionsMenu.visible = false
+	GameOptionsMenu.visible = true
+
+func _on_back_button_pressed() -> void:
+	MainOptionsMenu.visible = true
+	GameOptionsMenu.visible = false
+"
+
+[sub_resource type="GDScript" id="GDScript_7la6k"]
+script/source = "extends BaseButton
+
+func _ready() -> void:
+	self.pressed.connect(switch_scene)
+	
+func switch_scene() -> void:
+	get_parent_control()
+"
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_2nypq"]
+
+[sub_resource type="Theme" id="Theme_bky6r"]
+
+[node name="MainMenu" type="Control" node_paths=PackedStringArray("MainOptionsMenu", "GameOptionsMenu")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_826wr")
+MainOptionsMenu = NodePath("MarginContainer/MainOptions")
+GameOptionsMenu = NodePath("MarginContainer/GameSelectOptions")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("1_826wr")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+clip_contents = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 25
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 25
+
+[node name="MainOptions" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Title" type="Label" parent="MarginContainer/MainOptions"]
+layout_mode = 2
+size_flags_vertical = 6
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_outline_size = 25
+theme_override_fonts/font = ExtResource("1_l72w3")
+theme_override_font_sizes/font_size = 90
+text = "MathLab"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/MainOptions"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 3
+size_flags_stretch_ratio = 2.0
+theme_override_constants/separation = 10
+alignment = 1
+metadata/_edit_use_anchors_ = true
+
+[node name="PlayButton" type="Button" parent="MarginContainer/MainOptions/VBoxContainer"]
+custom_minimum_size = Vector2(200, 25)
+layout_mode = 2
+size_flags_vertical = 3
+focus_mode = 0
+theme = ExtResource("2_826wr")
+theme_override_font_sizes/font_size = 36
+text = "Play"
+script = SubResource("GDScript_7la6k")
+
+[node name="OptionsButton" type="Button" parent="MarginContainer/MainOptions/VBoxContainer"]
+custom_minimum_size = Vector2(200, 25)
+layout_mode = 2
+size_flags_vertical = 3
+focus_mode = 0
+theme = ExtResource("2_826wr")
+theme_override_font_sizes/font_size = 36
+text = "Options"
+
+[node name="CreditsButton" type="Button" parent="MarginContainer/MainOptions/VBoxContainer"]
+custom_minimum_size = Vector2(200, 25)
+layout_mode = 2
+size_flags_vertical = 3
+focus_mode = 0
+theme = ExtResource("2_826wr")
+theme_override_font_sizes/font_size = 36
+text = "Credits"
+
+[node name="ExitButton" type="Button" parent="MarginContainer/MainOptions/VBoxContainer"]
+custom_minimum_size = Vector2(200, 25)
+layout_mode = 2
+size_flags_vertical = 3
+focus_mode = 0
+theme = ExtResource("2_826wr")
+theme_override_font_sizes/font_size = 36
+text = "Exit"
+script = ExtResource("3_ucygd")
+
+[node name="GameSelectOptions" type="Panel" parent="MarginContainer"]
+visible = false
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_2nypq")
+
+[node name="BackButton" parent="MarginContainer/GameSelectOptions" instance=ExtResource("4_mipys")]
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+
+[node name="GridContainer" type="GridContainer" parent="MarginContainer/GameSelectOptions"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.1
+anchor_top = 0.3
+anchor_right = 0.9
+anchor_bottom = 0.9
+grow_horizontal = 2
+grow_vertical = 2
+theme = SubResource("Theme_bky6r")
+theme_override_constants/h_separation = 25
+theme_override_constants/v_separation = 20
+columns = 2
+metadata/_edit_use_anchors_ = true
+
+[node name="Game01_Button" type="Button" parent="MarginContainer/GameSelectOptions/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 0
+theme = ExtResource("2_826wr")
+theme_override_fonts/font = ExtResource("1_l72w3")
+theme_override_font_sizes/font_size = 18
+text = "Compare"
+autowrap_mode = 3
+script = ExtResource("5_8a8k8")
+target_scene = "uid://cocgjn5esn831"
+
+[node name="Game02_Button" type="Button" parent="MarginContainer/GameSelectOptions/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 0
+theme = ExtResource("2_826wr")
+theme_override_fonts/font = ExtResource("1_l72w3")
+theme_override_font_sizes/font_size = 18
+text = "Order"
+autowrap_mode = 3
+script = ExtResource("5_8a8k8")
+target_scene = "uid://cyxrrja1mm1wo"
+
+[node name="Game03_Button" type="Button" parent="MarginContainer/GameSelectOptions/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 0
+theme = ExtResource("2_826wr")
+theme_override_fonts/font = ExtResource("1_l72w3")
+theme_override_font_sizes/font_size = 18
+text = "Combine"
+autowrap_mode = 3
+script = ExtResource("5_8a8k8")
+target_scene = "uid://cbrnpyqat2fqn"
+
+[connection signal="pressed" from="MarginContainer/MainOptions/VBoxContainer/PlayButton" to="." method="_on_play_button_pressed"]
+[connection signal="pressed" from="MarginContainer/MainOptions/VBoxContainer/ExitButton" to="." method="_on_exit_button_pressed"]
+[connection signal="pressed" from="MarginContainer/GameSelectOptions/BackButton" to="." method="_on_back_button_pressed"]

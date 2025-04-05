@@ -1,0 +1,176 @@
+[gd_scene load_steps=8 format=3 uid="uid://4njrw7dnp1l"]
+
+[ext_resource type="PackedScene" uid="uid://yin4a6ky80w3" path="res://scenes/Components/CountdownProgressBar.tscn" id="1_dt1o6"]
+[ext_resource type="FontFile" uid="uid://dga3pu5c2jg31" path="res://assets/fonts/m6x11plus.ttf" id="2_td6ow"]
+[ext_resource type="Theme" uid="uid://b71hcsshbr0ht" path="res://assets/UI/themes/button_green.tres" id="3_s64dp"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kxlhs"]
+bg_color = Color(0.875888, 0.875888, 0.875888, 1)
+
+[sub_resource type="GDScript" id="GDScript_leioj"]
+resource_name = "ResultPanel"
+script/source = "extends PanelContainer
+
+signal text_changed(new_text)
+signal continue_pressed()
+
+@export_category(\"Content\")
+@export var text: String:
+	set(value):
+		if text != value:
+			text = value
+			emit_signal(\"text_changed\", value)
+
+@export_category(\"Animation\")
+@export var result_panel_lift_time : float = .5
+
+@export_category(\"Behavior\")
+@export var continue_on_countdown_end : float = 0
+
+var countdown : ProgressBar
+var already_pressed : bool = false
+
+func _ready() -> void:
+	self.countdown = $MarginContainer/VBoxContainer/Countdown
+	if continue_on_countdown_end <= 0:
+		self.countdown.visible = false
+	else:
+		self.countdown.visible = true
+
+# Propagate signal
+func _on_continue_button_pressed() -> void:
+	if already_pressed:
+		return
+	already_pressed = true
+	emit_signal(\"continue_pressed\")
+
+# Animation
+func animate_up() -> void:
+	var tween = self.create_tween()
+	var move_length = self.size.y
+	already_pressed = false
+
+	# Animate up
+	tween\\
+		.tween_property(self, \"position:y\", -move_length, result_panel_lift_time)\\
+		.set_ease(Tween.EASE_OUT)\\
+		.set_trans(Tween.TRANS_BACK)\\
+		.as_relative()\\
+		.from_current()
+	await tween.finished  # Wait for animation to complete
+
+	if continue_on_countdown_end > 0:
+		await countdown.start_countdown_await(continue_on_countdown_end)
+		if not already_pressed:
+			emit_signal(\"continue_pressed\")
+
+
+func animate_down() -> void:
+	var tween = self.create_tween()
+	var move_length = self.size.y
+	# Animate down
+	tween\\
+		.tween_property(self, \"position:y\", move_length, result_panel_lift_time)\\
+		.set_ease(Tween.EASE_IN)\\
+		.set_trans(Tween.TRANS_BACK)\\
+		.as_relative()\\
+		.from_current()
+	await tween.finished
+
+	if continue_on_countdown_end >= 0:
+		if countdown.tween and countdown.tween.is_running:
+			countdown.tween.kill()
+			countdown.value = 100
+"
+
+[sub_resource type="GDScript" id="GDScript_s64dp"]
+resource_name = "countdown"
+script/source = "extends ProgressBar
+
+signal countdown_finished
+var tween : Tween
+var timer: Timer = Timer.new()
+
+func _ready():
+	add_child(timer)
+	self.value = 100
+
+func start_countdown(duration: float, callback: Callable = Callable()):
+	if tween and tween.is_running():
+		tween.kill()
+	self.value = 100
+	timer.wait_time = duration
+	timer.start()
+	tween = create_tween()
+	tween.tween_property(self, \"value\", 0, duration)
+	
+	# Await Timer timeout and trigger callback if set
+	await timer.timeout
+	countdown_finished.emit()
+	if callback.is_valid():
+		callback.call()
+
+func start_countdown_await(duration: float) -> void:
+	await start_countdown(duration)
+"
+
+[sub_resource type="GDScript" id="GDScript_td6ow"]
+resource_name = "ResultLabel"
+script/source = "extends Label
+
+func _on_text_changed(new_text: String) -> void:
+	self.text = new_text
+"
+
+[node name="ResultPanel" type="PanelContainer"]
+anchors_preset = -1
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.5
+offset_bottom = 51.0
+grow_horizontal = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_kxlhs")
+script = SubResource("GDScript_leioj")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_top = 25
+theme_override_constants/margin_bottom = 25
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 25
+alignment = 1
+
+[node name="Countdown" parent="MarginContainer/VBoxContainer" instance=ExtResource("1_dt1o6")]
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+size_flags_horizontal = 5
+size_flags_vertical = 7
+theme_override_font_sizes/font_size = 36
+script = SubResource("GDScript_s64dp")
+
+[node name="Answer" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 6
+size_flags_stretch_ratio = 2.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("2_td6ow")
+theme_override_font_sizes/font_size = 36
+text = "Your answer is here"
+script = SubResource("GDScript_td6ow")
+
+[node name="ContinueButton" type="Button" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(250, 75)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 7
+size_flags_stretch_ratio = 1.5
+focus_mode = 0
+theme = ExtResource("3_s64dp")
+theme_override_font_sizes/font_size = 36
+text = "Continue"
+
+[connection signal="text_changed" from="." to="MarginContainer/VBoxContainer/Answer" method="_on_text_changed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/ContinueButton" to="." method="_on_continue_button_pressed"]

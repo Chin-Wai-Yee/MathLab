@@ -1,0 +1,202 @@
+[gd_scene load_steps=12 format=3 uid="uid://cbrnpyqat2fqn"]
+
+[ext_resource type="PackedScene" uid="uid://dpvbyb12sjmqc" path="res://scenes/Components/BackButton.tscn" id="1_pb4k3"]
+[ext_resource type="Theme" uid="uid://dsff7y27w8exb" path="res://assets/UI/themes/button_blue.tres" id="2_s818s"]
+[ext_resource type="Script" uid="uid://cgnu8hckh7vyx" path="res://scripts/NavigationButton.gd" id="3_fluhw"]
+[ext_resource type="Theme" uid="uid://br21qnloxm4t4" path="res://assets/UI/themes/button_grey.tres" id="4_an7g5"]
+[ext_resource type="Script" uid="uid://ddy4uusvo8url" path="res://scripts/DropTargetButton.gd" id="5_r0jrc"]
+[ext_resource type="Theme" uid="uid://dk526susvqdm4" path="res://assets/UI/themes/button_yellow.tres" id="6_8t42s"]
+[ext_resource type="Script" uid="uid://dyne2vfoemlp7" path="res://scripts/Draggable.gd" id="7_r28ph"]
+[ext_resource type="PackedScene" uid="uid://dkc1te60k31y6" path="res://scenes/Components/SubmitButton.tscn" id="8_43gsg"]
+[ext_resource type="PackedScene" uid="uid://y6wnrjhcbwrv" path="res://scenes/Components/QuestionCount.tscn" id="9_h6kap"]
+[ext_resource type="PackedScene" uid="uid://4njrw7dnp1l" path="res://scenes/Components/ResultPanel.tscn" id="10_5345o"]
+
+[sub_resource type="GDScript" id="GDScript_uop7a"]
+resource_name = "CombineNumberGame"
+script/source = "extends Control
+
+@export_category(\"Game Settings\")
+@export var target_number_max : int = 10
+@export var target_number_min : int = 1
+@export var total_question : int = 5
+
+@export_category(\"Controls\")
+@export var target_button : Button
+@export var submit_button : Button
+@export var picked_container : Container
+@export var number_container : Container
+@export var result_label : Container
+
+var target_number = 0
+var picked_numbers = []
+
+func _ready():
+	generate_question()
+
+func generate_question():
+	# Reset picked numbers
+	picked_numbers = []
+	for button in picked_container.get_children():
+		button.text = \"?\"
+	result_label.text = \"\"
+
+	target_number = randi_range(target_number_min, target_number_max)
+	target_button.text = str(target_number)
+
+	# Generate a list of unique numbers (ensuring at least one valid pair exists)
+	var available_numbers = []
+	var num1 = randi_range(1, target_number - 1)
+	available_numbers.append(num1)
+	available_numbers.append(target_number - num1)
+
+	# Ensure at least one valid pair exists
+	available_numbers[0] = randi_range(1, target_number - 1)
+	available_numbers[1] = target_number - available_numbers[0]
+
+	var children = number_container.get_children()
+	var children_count = len(children)
+	
+	for i in range(children_count - 2):
+		available_numbers.append(randi_range(1, target_number + 1))
+	
+	available_numbers.shuffle()  # Shuffle for randomness
+
+	# Assign numbers to buttons
+	for i in range(children_count):
+		var button = number_container.get_child(i)
+		button.text = str(available_numbers[i])
+
+func _on_Submit_Button_pressed():
+	if len(picked_numbers) < 2:
+		result_label.text = \"❌ Pick two numbers!\"
+		return
+	
+	if picked_numbers[0] + picked_numbers[1] == target_number:
+		result_label.text = \"✅ Correct!\"
+	else:
+		result_label.text = \"❌ Try Again!\"
+"
+
+[node name="CompareNumberGame" type="Control" node_paths=PackedStringArray("target_button", "submit_button", "picked_container", "number_container", "result_label")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_uop7a")
+target_button = NodePath("TargetNumber")
+submit_button = NodePath("SubmitButton")
+picked_container = NodePath("PickedContainer")
+number_container = NodePath("NumberContainer")
+result_label = NodePath("ResultsPanel")
+
+[node name="Back_Button" parent="." instance=ExtResource("1_pb4k3")]
+layout_mode = 1
+theme = ExtResource("2_s818s")
+script = ExtResource("3_fluhw")
+target_scene = "uid://dtrqi17ipsnkf"
+
+[node name="PickedContainer" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.2
+anchor_top = 0.3
+anchor_right = 0.4
+anchor_bottom = 0.3
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 25
+
+[node name="Picked1" type="Button" parent="PickedContainer"]
+custom_minimum_size = Vector2(75, 75)
+layout_mode = 2
+focus_mode = 0
+theme = ExtResource("4_an7g5")
+disabled = true
+script = ExtResource("5_r0jrc")
+
+[node name="Picked2" type="Button" parent="PickedContainer"]
+custom_minimum_size = Vector2(75, 75)
+layout_mode = 2
+focus_mode = 0
+theme = ExtResource("4_an7g5")
+disabled = true
+script = ExtResource("5_r0jrc")
+
+[node name="TargetNumber" type="Button" parent="."]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.75
+anchor_top = 0.3
+anchor_right = 0.75
+anchor_bottom = 0.3
+grow_horizontal = 2
+grow_vertical = 2
+focus_mode = 0
+theme = ExtResource("6_8t42s")
+
+[node name="NumberContainer" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.15
+anchor_top = 0.6
+anchor_right = 0.85
+anchor_bottom = 0.6
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 25
+alignment = 1
+
+[node name="Number1" type="Button" parent="NumberContainer"]
+custom_minimum_size = Vector2(75, 75)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+focus_mode = 0
+theme = ExtResource("2_s818s")
+theme_override_font_sizes/font_size = 54
+script = ExtResource("7_r28ph")
+
+[node name="Number2" type="Button" parent="NumberContainer"]
+custom_minimum_size = Vector2(75, 75)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+focus_mode = 0
+theme = ExtResource("2_s818s")
+theme_override_font_sizes/font_size = 54
+script = ExtResource("7_r28ph")
+
+[node name="Number3" type="Button" parent="NumberContainer"]
+custom_minimum_size = Vector2(75, 75)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+focus_mode = 0
+theme = ExtResource("2_s818s")
+theme_override_font_sizes/font_size = 54
+script = ExtResource("7_r28ph")
+
+[node name="SubmitButton" parent="." instance=ExtResource("8_43gsg")]
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 1
+anchor_top = 0.85
+anchor_bottom = 0.85
+theme_override_font_sizes/font_size = 36
+
+[node name="QuestionCount" parent="." instance=ExtResource("9_h6kap")]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.95
+anchor_top = 0.05
+anchor_right = 0.95
+anchor_bottom = 0.05
+offset_left = 0.0
+offset_bottom = 0.0
+
+[node name="ResultsPanel" parent="." instance=ExtResource("10_5345o")]
+layout_mode = 1
+
+[connection signal="pressed" from="SubmitButton" to="." method="_on_Submit_Button_pressed"]

@@ -1,0 +1,30 @@
+<svg
+    width="200"
+    height="200"
+    viewBox="0 0 200 200"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+>
+    <!-- Colorful Background -->
+    <rect x="10" y="10" width="180" height="180" rx="30" fill="url(#gradientBg)"/>
+    
+    <!-- Happy Calculator Face -->
+    <rect x="50" y="50" width="100" height="100" rx="15" fill="#FFFFFF" stroke="#333" stroke-width="5"/>
+    <circle cx="75" cy="80" r="5" fill="#333"/>
+    <circle cx="125" cy="80" r="5" fill="#333"/>
+    <path d="M 75 110 Q 100 130, 125 110" stroke="#333" stroke-width="4" fill="none"/>
+    
+    <!-- Math Symbols Around -->
+    <text x="25" y="50" font-size="35" font-weight="bold" fill="white">+</text>
+    <text x="150" y="50" font-size="35" font-weight="bold" fill="white">-</text>
+    <text x="25" y="170" font-size="35" font-weight="bold" fill="white">×</text>
+    <text x="150" y="170" font-size="35" font-weight="bold" fill="white">÷</text>
+
+    <!-- Gradient Background Definition -->
+    <defs>
+        <linearGradient id="gradientBg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#FF5722"/>
+            <stop offset="100%" stop-color="#FFC107"/>
+        </linearGradient>
+    </defs>
+</svg>
