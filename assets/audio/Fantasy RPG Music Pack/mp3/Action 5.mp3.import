@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://cng2ipya8rhue"
+path="res://.godot/imported/Action 5.mp3-09f193ea5b2d17e4e3953d655e0d3d4b.mp3str"
+
+[deps]
+
+source_file="res://assets/audio/Fantasy RPG Music Pack/mp3/Action 5.mp3"
+dest_files=["res://.godot/imported/Action 5.mp3-09f193ea5b2d17e4e3953d655e0d3d4b.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

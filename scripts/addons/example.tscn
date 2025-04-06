@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://dfx24nntnppqp"]
 
-[ext_resource type="Script" path="res://scripts/addons/addons/ReorderableContainer/reorderable_vbox.gd" id="2_no7x4"]
-[ext_resource type="Script" path="res://scripts/addons/addons/ReorderableContainer/reorderable_hbox.gd" id="2_yek3h"]
+[ext_resource type="Script" uid="uid://dfwix6liohng" path="res://scripts/addons/ReorderableContainer/reorderable_vbox.gd" id="2_no7x4"]
+[ext_resource type="Script" uid="uid://ddke16pywrhcg" path="res://scripts/addons/ReorderableContainer/reorderable_hbox.gd" id="2_yek3h"]
 
 [node name="Example" type="ColorRect"]
 anchors_preset = 15

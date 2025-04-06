@@ -1,0 +1,142 @@
+[gd_scene load_steps=8 format=3 uid="uid://cb87umn1hif86"]
+
+[ext_resource type="Texture2D" uid="uid://b4elbrrhyoeid" path="res://assets/UI/Sunny-land-assets-files/PNG/environment/layers/back.png" id="1_8up5r"]
+[ext_resource type="FontFile" uid="uid://dga3pu5c2jg31" path="res://assets/fonts/m6x11plus.ttf" id="1_c2lxx"]
+[ext_resource type="Theme" uid="uid://b71hcsshbr0ht" path="res://assets/UI/themes/button_green.tres" id="2_g1wtc"]
+[ext_resource type="Script" uid="uid://cgnu8hckh7vyx" path="res://scripts/NavigationButton.gd" id="3_ackco"]
+[ext_resource type="AudioStream" uid="uid://cf5iembl4gpp3" path="res://assets/audio/brackeys_platformer_assets_music/time_for_adventure.mp3" id="5_k4iee"]
+
+[sub_resource type="GDScript" id="GDScript_g1wtc"]
+resource_name = "GameEnd"
+script/source = "extends Control
+
+@export var ScoreLabel : Label
+@export var CommentLabel : Label
+
+func _ready() -> void:
+	# Get the score from the scene data
+	var score = SceneData.params.get(\"game_score\", 0)  # Default to 0 if no score is found
+	
+	# Set the score label text
+	ScoreLabel.text = str(score)
+	
+	# Set the score color based on the score
+	if score >= 90:
+		ScoreLabel.modulate = Color(0, 1, 0)  # Green for excellent score
+	elif score >= 70:
+		ScoreLabel.modulate = Color(0, 0, 1)  # Blue for great score
+	elif score >= 50:
+		ScoreLabel.modulate = Color(1, 1, 0)  # Yellow for good score
+	else:
+		ScoreLabel.modulate = Color(1, 0, 0)  # Red for low score
+	
+	# Assign a comment based on the score
+	var comment : String
+	if score >= 90:
+		comment = \"Excellent job!\"
+	elif score >= 70:
+		comment = \"Great work!\"
+	elif score >= 50:
+		comment = \"Good effort!\"
+	else:
+		comment = \"Keep trying, you'll get it!\"
+	
+	# Set the comment label text
+	CommentLabel.text = comment
+"
+
+[sub_resource type="Theme" id="Theme_ackco"]
+resource_local_to_scene = true
+resource_name = "TextTheme"
+default_font = ExtResource("1_c2lxx")
+default_font_size = 54
+
+[node name="GameEnd" type="Control" node_paths=PackedStringArray("ScoreLabel", "CommentLabel")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_g1wtc")
+ScoreLabel = NodePath("VBoxContainer/ScoreLabel")
+CommentLabel = NodePath("VBoxContainer/CommentLabel")
+
+[node name="Background" type="TextureRect" parent="."]
+self_modulate = Color(0.846765, 0.844228, 0.7668, 1)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("1_8up5r")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.1
+anchor_top = 0.1
+anchor_right = 0.4
+anchor_bottom = 0.9
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="Label" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+theme = SubResource("Theme_ackco")
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 5
+theme_override_constants/shadow_offset_y = 5
+theme_override_constants/shadow_outline_size = 5
+text = "Your score is"
+horizontal_alignment = 1
+
+[node name="ScoreLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+theme = SubResource("Theme_ackco")
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 5
+theme_override_constants/shadow_offset_y = 5
+theme_override_constants/shadow_outline_size = 5
+theme_override_font_sizes/font_size = 72
+text = "100"
+horizontal_alignment = 1
+
+[node name="CommentLabel" type="Label" parent="VBoxContainer"]
+custom_minimum_size = Vector2(275, 0)
+layout_mode = 2
+theme = SubResource("Theme_ackco")
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 5
+theme_override_constants/shadow_offset_y = 5
+theme_override_constants/shadow_outline_size = 5
+theme_override_font_sizes/font_size = 36
+text = "Good Job!"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="ContinueButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.6
+anchor_top = 0.7
+anchor_right = 0.9
+anchor_bottom = 0.9
+grow_horizontal = 2
+grow_vertical = 0
+theme = ExtResource("2_g1wtc")
+text = "Continue"
+script = ExtResource("3_ackco")
+target_scene = "uid://dtrqi17ipsnkf"
+scene_params = {
+"page": "game_select"
+}
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("5_k4iee")
+autoplay = true
+bus = &"BGM"
+parameters/looping = true

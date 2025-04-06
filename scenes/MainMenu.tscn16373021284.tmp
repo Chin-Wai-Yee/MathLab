@@ -1,0 +1,525 @@
+[gd_scene load_steps=21 format=3 uid="uid://dtrqi17ipsnkf"]
+
+[ext_resource type="FontFile" uid="uid://dga3pu5c2jg31" path="res://assets/fonts/m6x11plus.ttf" id="1_l72w3"]
+[ext_resource type="Texture2D" uid="uid://ly75bh2ec20e" path="res://assets/UI/Sunny-land-assets-files/PNG/environment/environment-preview.png" id="1_ucygd"]
+[ext_resource type="Theme" uid="uid://c7foxj0f51j5x" path="res://assets/UI/themes/button.tres" id="2_826wr"]
+[ext_resource type="Script" uid="uid://74v81lnahn5y" path="res://scripts/ExitButton.gd" id="3_ucygd"]
+[ext_resource type="PackedScene" uid="uid://dpvbyb12sjmqc" path="res://scenes/Components/BackButton.tscn" id="4_mipys"]
+[ext_resource type="Script" uid="uid://cgnu8hckh7vyx" path="res://scripts/NavigationButton.gd" id="5_8a8k8"]
+[ext_resource type="Texture2D" uid="uid://c06nkrvgf788n" path="res://assets/UI/IconGodotNode/node/icon_gear.png" id="6_mipys"]
+[ext_resource type="AudioStream" uid="uid://cf5iembl4gpp3" path="res://assets/audio/brackeys_platformer_assets_music/time_for_adventure.mp3" id="7_ucygd"]
+[ext_resource type="Texture2D" uid="uid://berntqv8flnlo" path="res://assets/UI/Complete_UI_Essential_Pack_Free/01_Flat_Theme/Sprites/UI_Flat_IconCross01b.png" id="8_2nypq"]
+[ext_resource type="Texture2D" uid="uid://dp6cipnsi6vhq" path="res://assets/UI/Complete_UI_Essential_Pack_Free/01_Flat_Theme/Sprites/UI_Flat_IconCross01c.png" id="9_bky6r"]
+[ext_resource type="Texture2D" uid="uid://6gcglknd5x7" path="res://assets/UI/Complete_UI_Essential_Pack_Free/01_Flat_Theme/Sprites/UI_Flat_IconCross01a.png" id="10_l4mxc"]
+
+[sub_resource type="GDScript" id="GDScript_826wr"]
+resource_name = "MainMenu"
+script/source = "extends Control
+
+@export var MainOptionsMenu   : Control
+@export var GameOptionsMenu   : Control
+@export var GameSettingsMenu  : Control
+@export var GameDifficultMenu : Control
+
+@onready var pages : Array[Control] = [
+	MainOptionsMenu,
+	GameOptionsMenu,
+	GameSettingsMenu,
+	GameDifficultMenu
+]
+
+func _ready() -> void:
+	if (not GameOptionsMenu or not MainOptionsMenu):
+		print(\"The options menu doesn't exist!\")
+		get_tree().quit()
+
+	hide_all()
+	var page = SceneData.params.get(\"page\", \"main_menu\")
+	match page:
+		\"main_menu\":
+			MainOptionsMenu.visible = true
+		\"game_select\":
+			GameOptionsMenu.visible = true
+
+func hide_all():
+	for page in self.pages:
+		page.visible = false
+
+func _on_exit_button_pressed() -> void:
+	get_tree().quit()
+
+func show_main_options() -> void:
+	hide_all()
+	MainOptionsMenu.visible = true
+
+func show_game_options() -> void:
+	hide_all()
+	GameOptionsMenu.visible = true
+
+func show_game_settings() -> void:
+	hide_all()
+	GameSettingsMenu.visible = true
+
+func show_difficulty_settings() -> void:
+	hide_all()
+	GameDifficultMenu.visible = true
+"
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mipys"]
+atlas = ExtResource("1_ucygd")
+region = Rect2(1109, 1, 344, 185)
+
+[sub_resource type="GDScript" id="GDScript_7la6k"]
+script/source = "extends BaseButton
+
+func _ready() -> void:
+	self.pressed.connect(switch_scene)
+	
+func switch_scene() -> void:
+	get_parent_control()
+"
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_2nypq"]
+
+[sub_resource type="Theme" id="Theme_bky6r"]
+
+[sub_resource type="Theme" id="Theme_ucygd"]
+default_font = ExtResource("1_l72w3")
+default_font_size = 36
+
+[sub_resource type="GDScript" id="GDScript_ucygd"]
+resource_name = "SFXVolume"
+script/source = "extends HSlider
+
+func _ready() -> void:
+	self.value_changed.connect(
+		func(volume):
+			GameSettings.set_sfx_volume(volume / 100.0)
+	)
+"
+
+[sub_resource type="GDScript" id="GDScript_mipys"]
+resource_name = "BGMVolume"
+script/source = "extends HSlider
+
+func _ready() -> void:
+	self.value_changed.connect(
+		func(volume):
+			GameSettings.set_bgm_volume(volume / 100.0)
+	)
+"
+
+[sub_resource type="GDScript" id="GDScript_2nypq"]
+resource_name = "GameSettings"
+script/source = "extends Panel
+
+@export var TotalQuestion : OptionButton
+@export var NumberRange : OptionButton
+
+func _ready():
+	for i in TotalQuestion.item_count:
+		var text = TotalQuestion.get_item_text(i)
+		var parts = text.split(\" \")
+		if parts.size() > 0 and int(parts[0]) == GameSetting.total_question:
+			TotalQuestion.select(i)
+			break
+
+func _on_total_question_option_button_item_selected(index: int) -> void:
+	var text = TotalQuestion.get_item_text(index)
+	var total_question = text.split(\" \")[0]
+	GameSettings.total_question = total_question
+
+func _on_number_range_item_selected(index: int) -> void:
+	var text = NumberRange.get_item_text(index)
+	var parts = text.split(\" - \")
+	if parts.size() == 2:
+		var num_min = int(parts[0])
+		var num_max = int(parts[1])
+		
+		GameSettings.number_min = num_min
+		GameSettings.number_max = num_max
+
+		print(\"Range set to:\", num_min, \"-\", num_max)
+	else:
+		print(\"Invalid format for range:\", text)
+"
+
+[node name="MainMenu" type="Control" node_paths=PackedStringArray("MainOptionsMenu", "GameOptionsMenu", "GameSettingsMenu", "GameDifficultMenu")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_826wr")
+MainOptionsMenu = NodePath("MarginContainer/MainOptions")
+GameOptionsMenu = NodePath("MarginContainer/GameSelectOptions")
+GameSettingsMenu = NodePath("MarginContainer/GameSettings")
+GameDifficultMenu = NodePath("MarginContainer/GameDiffucultySettings")
+
+[node name="Background" type="TextureRect" parent="."]
+self_modulate = Color(0.608164, 0.497727, 0.402243, 1)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("AtlasTexture_mipys")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+clip_contents = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 25
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 25
+
+[node name="MainOptions" type="VBoxContainer" parent="MarginContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Title" type="Label" parent="MarginContainer/MainOptions"]
+layout_mode = 2
+size_flags_vertical = 6
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 3
+theme_override_constants/shadow_offset_y = 3
+theme_override_constants/shadow_outline_size = 25
+theme_override_fonts/font = ExtResource("1_l72w3")
+theme_override_font_sizes/font_size = 90
+text = "MathLab"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/MainOptions"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 3
+size_flags_stretch_ratio = 2.0
+theme_override_constants/separation = 10
+alignment = 1
+metadata/_edit_use_anchors_ = true
+
+[node name="PlayButton" type="Button" parent="MarginContainer/MainOptions/VBoxContainer"]
+custom_minimum_size = Vector2(200, 25)
+layout_mode = 2
+size_flags_vertical = 3
+focus_mode = 0
+theme = ExtResource("2_826wr")
+theme_override_font_sizes/font_size = 36
+text = "Play"
+script = SubResource("GDScript_7la6k")
+
+[node name="OptionsButton" type="Button" parent="MarginContainer/MainOptions/VBoxContainer"]
+custom_minimum_size = Vector2(200, 25)
+layout_mode = 2
+size_flags_vertical = 3
+focus_mode = 0
+theme = ExtResource("2_826wr")
+theme_override_font_sizes/font_size = 36
+text = "Options"
+
+[node name="CreditsButton" type="Button" parent="MarginContainer/MainOptions/VBoxContainer"]
+custom_minimum_size = Vector2(200, 25)
+layout_mode = 2
+size_flags_vertical = 3
+focus_mode = 0
+theme = ExtResource("2_826wr")
+theme_override_font_sizes/font_size = 36
+text = "Credits"
+
+[node name="ExitButton" type="Button" parent="MarginContainer/MainOptions/VBoxContainer"]
+custom_minimum_size = Vector2(200, 25)
+layout_mode = 2
+size_flags_vertical = 3
+focus_mode = 0
+theme = ExtResource("2_826wr")
+theme_override_font_sizes/font_size = 36
+text = "Exit"
+script = ExtResource("3_ucygd")
+
+[node name="GameSelectOptions" type="Panel" parent="MarginContainer"]
+visible = false
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_2nypq")
+
+[node name="BackButton" parent="MarginContainer/GameSelectOptions" instance=ExtResource("4_mipys")]
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+
+[node name="Settings" type="TextureButton" parent="MarginContainer/GameSelectOptions"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -40.0
+offset_bottom = 40.0
+grow_horizontal = 0
+texture_normal = ExtResource("6_mipys")
+texture_pressed = ExtResource("6_mipys")
+texture_hover = ExtResource("6_mipys")
+texture_disabled = ExtResource("6_mipys")
+texture_focused = ExtResource("6_mipys")
+stretch_mode = 5
+
+[node name="GridContainer" type="GridContainer" parent="MarginContainer/GameSelectOptions"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.1
+anchor_top = 0.3
+anchor_right = 0.9
+anchor_bottom = 0.9
+grow_horizontal = 2
+grow_vertical = 2
+theme = SubResource("Theme_bky6r")
+theme_override_constants/h_separation = 25
+theme_override_constants/v_separation = 20
+columns = 2
+metadata/_edit_use_anchors_ = true
+
+[node name="Game01_Button" type="Button" parent="MarginContainer/GameSelectOptions/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 0
+theme = ExtResource("2_826wr")
+theme_override_fonts/font = ExtResource("1_l72w3")
+theme_override_font_sizes/font_size = 36
+text = "Compare"
+autowrap_mode = 3
+script = ExtResource("5_8a8k8")
+target_scene = "uid://cbrnpyqat2fqn"
+
+[node name="Game02_Button" type="Button" parent="MarginContainer/GameSelectOptions/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 0
+theme = ExtResource("2_826wr")
+theme_override_fonts/font = ExtResource("1_l72w3")
+theme_override_font_sizes/font_size = 36
+text = "Order"
+autowrap_mode = 3
+script = ExtResource("5_8a8k8")
+target_scene = "uid://cyxrrja1mm1wo"
+
+[node name="Game03_Button" type="Button" parent="MarginContainer/GameSelectOptions/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 0
+theme = ExtResource("2_826wr")
+theme_override_fonts/font = ExtResource("1_l72w3")
+theme_override_font_sizes/font_size = 36
+text = "Combine"
+autowrap_mode = 3
+script = ExtResource("5_8a8k8")
+target_scene = "uid://dicf8dyq8sunb"
+
+[node name="GameSettings" type="Panel" parent="MarginContainer"]
+visible = false
+layout_mode = 2
+
+[node name="BackButton" parent="MarginContainer/GameSettings" instance=ExtResource("4_mipys")]
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 1
+offset_bottom = 54.0
+
+[node name="Label" type="Label" parent="MarginContainer/GameSettings"]
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 0.05
+anchor_right = 1.0
+anchor_bottom = 0.05
+offset_bottom = 54.0
+grow_horizontal = 2
+size_flags_horizontal = 3
+theme = SubResource("Theme_ucygd")
+theme_override_font_sizes/font_size = 54
+text = "Settings"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/GameSettings"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.05
+anchor_top = 0.25
+anchor_right = 0.95
+anchor_bottom = 0.95
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_vertical = 3
+vertical_scroll_mode = 2
+
+[node name="GridContainer" type="GridContainer" parent="MarginContainer/GameSettings/ScrollContainer"]
+layout_mode = 2
+theme_override_constants/h_separation = 20
+theme_override_constants/v_separation = 20
+columns = 2
+
+[node name="SFXVolumeLabel" type="Label" parent="MarginContainer/GameSettings/ScrollContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme = SubResource("Theme_ucygd")
+text = "Sound effect volume"
+
+[node name="SFXContainer" type="HBoxContainer" parent="MarginContainer/GameSettings/ScrollContainer/GridContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="MuteSFXButton" type="TextureButton" parent="MarginContainer/GameSettings/ScrollContainer/GridContainer/SFXContainer"]
+visible = false
+layout_mode = 2
+
+[node name="SFXVolumeSlider" type="HSlider" parent="MarginContainer/GameSettings/ScrollContainer/GridContainer/SFXContainer"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 9
+size_flags_vertical = 1
+value = 50.0
+script = SubResource("GDScript_ucygd")
+
+[node name="BGMVolumeLabel" type="Label" parent="MarginContainer/GameSettings/ScrollContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme = SubResource("Theme_ucygd")
+text = "Sound bgm volume"
+
+[node name="BGMContainer" type="HBoxContainer" parent="MarginContainer/GameSettings/ScrollContainer/GridContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="MuteBGMButton" type="TextureButton" parent="MarginContainer/GameSettings/ScrollContainer/GridContainer/BGMContainer"]
+visible = false
+layout_mode = 2
+
+[node name="BGMVolumeSlider" type="HSlider" parent="MarginContainer/GameSettings/ScrollContainer/GridContainer/BGMContainer"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 9
+size_flags_vertical = 1
+value = 50.0
+script = SubResource("GDScript_mipys")
+
+[node name="GameDiffucultySettings" type="Panel" parent="MarginContainer" node_paths=PackedStringArray("TotalQuestion", "NumberRange")]
+layout_mode = 2
+script = SubResource("GDScript_2nypq")
+TotalQuestion = NodePath("ScrollContainer/GridContainer/TotalQuestionOptionButton")
+NumberRange = NodePath("ScrollContainer/GridContainer/NumberRange")
+
+[node name="Close" type="TextureButton" parent="MarginContainer/GameDiffucultySettings"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.95
+anchor_top = 0.05
+anchor_right = 0.95
+anchor_bottom = 0.05
+offset_left = -40.0
+offset_bottom = 40.0
+grow_horizontal = 0
+texture_normal = ExtResource("8_2nypq")
+texture_pressed = ExtResource("9_bky6r")
+texture_hover = ExtResource("10_l4mxc")
+texture_disabled = ExtResource("8_2nypq")
+texture_focused = ExtResource("10_l4mxc")
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="MarginContainer/GameDiffucultySettings"]
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 0.05
+anchor_right = 1.0
+anchor_bottom = 0.05
+offset_bottom = 54.0
+grow_horizontal = 2
+size_flags_horizontal = 3
+theme = SubResource("Theme_ucygd")
+theme_override_font_sizes/font_size = 54
+text = "Settings"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/GameDiffucultySettings"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.05
+anchor_top = 0.25
+anchor_right = 0.95
+anchor_bottom = 0.95
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_vertical = 3
+vertical_scroll_mode = 2
+
+[node name="GridContainer" type="GridContainer" parent="MarginContainer/GameDiffucultySettings/ScrollContainer"]
+layout_mode = 2
+theme_override_constants/h_separation = 20
+theme_override_constants/v_separation = 20
+columns = 2
+
+[node name="TotalQuestionLabel" type="Label" parent="MarginContainer/GameDiffucultySettings/ScrollContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme = SubResource("Theme_ucygd")
+text = "Total question"
+
+[node name="TotalQuestionOptionButton" type="OptionButton" parent="MarginContainer/GameDiffucultySettings/ScrollContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+selected = 0
+item_count = 4
+popup/item_0/text = "2 (demo purpose)"
+popup/item_0/id = 3
+popup/item_1/text = "5"
+popup/item_1/id = 0
+popup/item_2/text = "10"
+popup/item_2/id = 1
+popup/item_3/text = "15"
+popup/item_3/id = 2
+
+[node name="NumberRangeLabel" type="Label" parent="MarginContainer/GameDiffucultySettings/ScrollContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme = SubResource("Theme_ucygd")
+text = "Number range"
+
+[node name="NumberRange" type="OptionButton" parent="MarginContainer/GameDiffucultySettings/ScrollContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+selected = 0
+item_count = 2
+popup/item_0/text = "0 - 9"
+popup/item_0/id = 0
+popup/item_1/text = "0 - 99"
+popup/item_1/id = 1
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("7_ucygd")
+autoplay = true
+bus = &"BGM"
+parameters/looping = true
+
+[connection signal="pressed" from="MarginContainer/MainOptions/VBoxContainer/PlayButton" to="." method="show_game_options"]
+[connection signal="pressed" from="MarginContainer/MainOptions/VBoxContainer/OptionsButton" to="." method="show_game_settings"]
+[connection signal="pressed" from="MarginContainer/MainOptions/VBoxContainer/ExitButton" to="." method="_on_exit_button_pressed"]
+[connection signal="pressed" from="MarginContainer/GameSelectOptions/BackButton" to="." method="show_main_options"]
+[connection signal="pressed" from="MarginContainer/GameSelectOptions/Settings" to="." method="show_difficulty_settings"]
+[connection signal="pressed" from="MarginContainer/GameSettings/BackButton" to="." method="show_main_options"]
+[connection signal="pressed" from="MarginContainer/GameDiffucultySettings/Close" to="." method="show_game_options"]
+[connection signal="item_selected" from="MarginContainer/GameDiffucultySettings/ScrollContainer/GridContainer/TotalQuestionOptionButton" to="MarginContainer/GameDiffucultySettings" method="_on_total_question_option_button_item_selected"]
+[connection signal="item_selected" from="MarginContainer/GameDiffucultySettings/ScrollContainer/GridContainer/NumberRange" to="MarginContainer/GameDiffucultySettings" method="_on_number_range_item_selected"]

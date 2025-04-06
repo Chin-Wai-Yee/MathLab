@@ -1,6 +1,7 @@
-[gd_scene load_steps=11 format=3 uid="uid://cbrnpyqat2fqn"]
+[gd_scene load_steps=12 format=3 uid="uid://cbrnpyqat2fqn"]
 
 [ext_resource type="PackedScene" uid="uid://dpvbyb12sjmqc" path="res://scenes/Components/BackButton.tscn" id="1_jttyy"]
+[ext_resource type="PackedScene" uid="uid://cs1a7envxn41e" path="res://scenes/Components/GameBackground.tscn" id="1_vnd03"]
 [ext_resource type="Theme" uid="uid://dsff7y27w8exb" path="res://assets/UI/themes/button_blue.tres" id="2_xlf2q"]
 [ext_resource type="Script" uid="uid://cgnu8hckh7vyx" path="res://scripts/NavigationButton.gd" id="3_48pyl"]
 [ext_resource type="FontFile" uid="uid://dga3pu5c2jg31" path="res://assets/fonts/m6x11plus.ttf" id="4_qtpxd"]
@@ -24,17 +25,23 @@ script/source = "extends Control
 @export var number2_button : Button
 @export var answer_button_group : ButtonGroup
 @export var submit_button : Button
-@export var result_panel : Container
+@export var result_panel : ResultPanel
 @export var question_label : Label
 
 @export_category(\"Scenes\")
-@export_file(\"*.tscn\") var game_done_scene : String
+@export_file(\"*.tscn\") var game_end_scene : String
 
 var current_question = 0
 var number1 = -1
 var number2 = -1
+var correct_count = 0
 
 func _ready():
+	# Use persistent GameSetting values
+	min_number = GameSettings.number_min
+	max_number = GameSettings.number_max
+	total_question = GameSettings.total_question
+
 	# Buttons setup
 	answer_button_group.pressed.connect(
 		func(_button):
@@ -76,12 +83,6 @@ func generate_random_numbers() -> Array[int]:
 
 	return [num1, num2]
 
-func check_result(num1, num2) -> void:
-	if num1 > num2:
-		result_panel.text = \"✅ Correct!\"
-	else:
-		result_panel.text = \"❌ Try Again!\"
-
 func _on_submit_button_pressed() -> void:
 	var buttons = answer_button_group.get_buttons()
 	buttons.append(submit_button)
@@ -92,15 +93,27 @@ func _on_submit_button_pressed() -> void:
 	var pressed_button = answer_button_group.get_pressed_button()
 	if not pressed_button:
 		return
+	var result : bool
 	if \"GreaterButton\".nocasecmp_to(pressed_button.name) == 0:
-		check_result(number1, number2)
+		result = check_result(number1, number2)
 	else:
-		check_result(number2, number1)
-	result_panel.animate_up()
+		result = check_result(number2, number1)
+	
+	if result == true:
+		correct_count += 1
+		result_panel.show_success()
+	else:
+		result_panel.show_error()
+
+func check_result(num1, num2) -> bool:
+	return num1 > num2
 
 func _on_results_panel_continue_pressed() -> void:
 	if current_question >= total_question:
-		get_tree().change_scene_to_file(game_done_scene)
+		@warning_ignore(\"integer_division\")
+		var game_score : int =  correct_count * 100 / total_question
+		SceneData.params.get_or_add(\"game_score\",game_score)
+		get_tree().change_scene_to_file(game_end_scene)
 		return
 	else:
 		var buttons = answer_button_group.get_buttons()
@@ -132,12 +145,18 @@ answer_button_group = SubResource("ButtonGroup_4xswm")
 submit_button = NodePath("VBoxContainer/SubmitButton")
 result_panel = NodePath("ResultsPanel")
 question_label = NodePath("QuestionCount")
-game_done_scene = "uid://dtrqi17ipsnkf"
+game_end_scene = "uid://cb87umn1hif86"
+
+[node name="Background" parent="." instance=ExtResource("1_vnd03")]
+layout_mode = 1
 
 [node name="Back_Button" parent="." instance=ExtResource("1_jttyy")]
 layout_mode = 1
 script = ExtResource("3_48pyl")
 target_scene = "uid://dtrqi17ipsnkf"
+scene_params = {
+"page": "game_select"
+}
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
 layout_mode = 1

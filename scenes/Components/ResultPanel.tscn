@@ -1,87 +1,16 @@
-[gd_scene load_steps=8 format=3 uid="uid://4njrw7dnp1l"]
+[gd_scene load_steps=12 format=3 uid="uid://4njrw7dnp1l"]
 
 [ext_resource type="PackedScene" uid="uid://yin4a6ky80w3" path="res://scenes/Components/CountdownProgressBar.tscn" id="1_dt1o6"]
+[ext_resource type="Script" uid="uid://b6oxu674n1gj" path="res://scripts/ResultPanel.gd" id="1_oisnk"]
 [ext_resource type="FontFile" uid="uid://dga3pu5c2jg31" path="res://assets/fonts/m6x11plus.ttf" id="2_td6ow"]
+[ext_resource type="Texture2D" uid="uid://bhe28hs6fn88p" path="res://assets/UI/Complete_UI_Essential_Pack_Free/01_Flat_Theme/Sprites/UI_Flat_IconCheck01a.png" id="2_yxtvj"]
+[ext_resource type="Texture2D" uid="uid://6gcglknd5x7" path="res://assets/UI/Complete_UI_Essential_Pack_Free/01_Flat_Theme/Sprites/UI_Flat_IconCross01a.png" id="3_d4y6a"]
 [ext_resource type="Theme" uid="uid://b71hcsshbr0ht" path="res://assets/UI/themes/button_green.tres" id="3_s64dp"]
+[ext_resource type="AudioStream" uid="uid://qxkc23wqdvp0" path="res://assets/audio/inteface_sfx_pack_1_ogg/Ogg/Confirm_tones/style5/confirm_style_5_001.ogg" id="4_7luix"]
+[ext_resource type="AudioStream" uid="uid://lau11304yt1a" path="res://assets/audio/inteface_sfx_pack_1_ogg/Ogg/Error_tones/style5/error_style_5_001.ogg" id="5_iyb3d"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kxlhs"]
 bg_color = Color(0.875888, 0.875888, 0.875888, 1)
-
-[sub_resource type="GDScript" id="GDScript_leioj"]
-resource_name = "ResultPanel"
-script/source = "extends PanelContainer
-
-signal text_changed(new_text)
-signal continue_pressed()
-
-@export_category(\"Content\")
-@export var text: String:
-	set(value):
-		if text != value:
-			text = value
-			emit_signal(\"text_changed\", value)
-
-@export_category(\"Animation\")
-@export var result_panel_lift_time : float = .5
-
-@export_category(\"Behavior\")
-@export var continue_on_countdown_end : float = 0
-
-var countdown : ProgressBar
-var already_pressed : bool = false
-
-func _ready() -> void:
-	self.countdown = $MarginContainer/VBoxContainer/Countdown
-	if continue_on_countdown_end <= 0:
-		self.countdown.visible = false
-	else:
-		self.countdown.visible = true
-
-# Propagate signal
-func _on_continue_button_pressed() -> void:
-	if already_pressed:
-		return
-	already_pressed = true
-	emit_signal(\"continue_pressed\")
-
-# Animation
-func animate_up() -> void:
-	var tween = self.create_tween()
-	var move_length = self.size.y
-	already_pressed = false
-
-	# Animate up
-	tween\\
-		.tween_property(self, \"position:y\", -move_length, result_panel_lift_time)\\
-		.set_ease(Tween.EASE_OUT)\\
-		.set_trans(Tween.TRANS_BACK)\\
-		.as_relative()\\
-		.from_current()
-	await tween.finished  # Wait for animation to complete
-
-	if continue_on_countdown_end > 0:
-		await countdown.start_countdown_await(continue_on_countdown_end)
-		if not already_pressed:
-			emit_signal(\"continue_pressed\")
-
-
-func animate_down() -> void:
-	var tween = self.create_tween()
-	var move_length = self.size.y
-	# Animate down
-	tween\\
-		.tween_property(self, \"position:y\", move_length, result_panel_lift_time)\\
-		.set_ease(Tween.EASE_IN)\\
-		.set_trans(Tween.TRANS_BACK)\\
-		.as_relative()\\
-		.from_current()
-	await tween.finished
-
-	if continue_on_countdown_end >= 0:
-		if countdown.tween and countdown.tween.is_running:
-			countdown.tween.kill()
-			countdown.value = 100
-"
 
 [sub_resource type="GDScript" id="GDScript_s64dp"]
 resource_name = "countdown"
@@ -130,7 +59,9 @@ anchor_bottom = 1.5
 offset_bottom = 51.0
 grow_horizontal = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_kxlhs")
-script = SubResource("GDScript_leioj")
+script = ExtResource("1_oisnk")
+success_icon = ExtResource("2_yxtvj")
+error_icon = ExtResource("3_d4y6a")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 2
@@ -150,7 +81,19 @@ size_flags_vertical = 7
 theme_override_font_sizes/font_size = 36
 script = SubResource("GDScript_s64dp")
 
-[node name="Answer" type="Label" parent="MarginContainer/VBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 15
+alignment = 1
+
+[node name="Icon" type="TextureRect" parent="MarginContainer/VBoxContainer/HBoxContainer"]
+visible = false
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Answer" type="Label" parent="MarginContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 6
@@ -172,5 +115,13 @@ theme = ExtResource("3_s64dp")
 theme_override_font_sizes/font_size = 36
 text = "Continue"
 
-[connection signal="text_changed" from="." to="MarginContainer/VBoxContainer/Answer" method="_on_text_changed"]
+[node name="Success" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("4_7luix")
+bus = &"SFX"
+
+[node name="Error" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("5_iyb3d")
+bus = &"SFX"
+
+[connection signal="text_changed" from="." to="MarginContainer/VBoxContainer/HBoxContainer/Answer" method="_on_text_changed"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/ContinueButton" to="." method="_on_continue_button_pressed"]

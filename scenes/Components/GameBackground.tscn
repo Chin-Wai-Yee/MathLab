@@ -1,0 +1,25 @@
+[gd_scene load_steps=4 format=3 uid="uid://cs1a7envxn41e"]
+
+[ext_resource type="Texture2D" uid="uid://b4elbrrhyoeid" path="res://assets/UI/Sunny-land-assets-files/PNG/environment/layers/back.png" id="1_xudk5"]
+[ext_resource type="AudioStream" uid="uid://76nsry5x4mx1" path="res://assets/audio/Pixel Music Pack/mp3/Pixel 4.mp3" id="2_dg16r"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fluhw"]
+atlas = ExtResource("1_xudk5")
+region = Rect2(0, 0, 384, 165)
+
+[node name="Background" type="TextureRect"]
+self_modulate = Color(0.238658, 0.245516, 0.290205, 1)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("AtlasTexture_fluhw")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="bgm" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("2_dg16r")
+autoplay = true
+bus = &"BGM"
+parameters/looping = true

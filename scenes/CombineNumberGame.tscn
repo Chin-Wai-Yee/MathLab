@@ -1,17 +1,19 @@
-[gd_scene load_steps=12 format=3 uid="uid://cbrnpyqat2fqn"]
+[gd_scene load_steps=14 format=3 uid="uid://dicf8dyq8sunb"]
 
 [ext_resource type="PackedScene" uid="uid://dpvbyb12sjmqc" path="res://scenes/Components/BackButton.tscn" id="1_pb4k3"]
+[ext_resource type="PackedScene" uid="uid://cs1a7envxn41e" path="res://scenes/Components/GameBackground.tscn" id="1_s818s"]
 [ext_resource type="Theme" uid="uid://dsff7y27w8exb" path="res://assets/UI/themes/button_blue.tres" id="2_s818s"]
 [ext_resource type="Script" uid="uid://cgnu8hckh7vyx" path="res://scripts/NavigationButton.gd" id="3_fluhw"]
 [ext_resource type="Theme" uid="uid://br21qnloxm4t4" path="res://assets/UI/themes/button_grey.tres" id="4_an7g5"]
-[ext_resource type="Script" uid="uid://ddy4uusvo8url" path="res://scripts/DropTargetButton.gd" id="5_r0jrc"]
-[ext_resource type="Theme" uid="uid://dk526susvqdm4" path="res://assets/UI/themes/button_yellow.tres" id="6_8t42s"]
+[ext_resource type="FontFile" uid="uid://dga3pu5c2jg31" path="res://assets/fonts/m6x11plus.ttf" id="5_fluhw"]
+[ext_resource type="Script" uid="uid://c1c4kbdnabbjx" path="res://scripts/DropTarget.gd" id="5_pb4k3"]
 [ext_resource type="Script" uid="uid://dyne2vfoemlp7" path="res://scripts/Draggable.gd" id="7_r28ph"]
+[ext_resource type="Theme" uid="uid://cwakmtcbo5cl1" path="res://assets/UI/themes/button_red.tres" id="7_s818s"]
 [ext_resource type="PackedScene" uid="uid://dkc1te60k31y6" path="res://scenes/Components/SubmitButton.tscn" id="8_43gsg"]
 [ext_resource type="PackedScene" uid="uid://y6wnrjhcbwrv" path="res://scenes/Components/QuestionCount.tscn" id="9_h6kap"]
 [ext_resource type="PackedScene" uid="uid://4njrw7dnp1l" path="res://scenes/Components/ResultPanel.tscn" id="10_5345o"]
 
-[sub_resource type="GDScript" id="GDScript_uop7a"]
+[sub_resource type="GDScript" id="GDScript_pb4k3"]
 resource_name = "CombineNumberGame"
 script/source = "extends Control
 
@@ -25,20 +27,32 @@ script/source = "extends Control
 @export var submit_button : Button
 @export var picked_container : Container
 @export var number_container : Container
-@export var result_label : Container
+@export var result_panel : ResultPanel
+@export var question_label : Label
+@export_file var game_end_scene : String
 
-var target_number = 0
-var picked_numbers = []
+var current_question : int = 0
+var correct_count : int = 0
+var target_number : int = 0
 
 func _ready():
+	target_number_min = GameSettings.number_min
+	target_number_max = GameSettings.number_max
+	total_question = GameSettings.total_question
+
+	question_label.total_question = total_question
+	for number in number_container.get_children():
+		number.button_clicked.connect(
+			func(): _on_Number_Button_pressed(number)
+		)
 	generate_question()
 
 func generate_question():
+	current_question += 1
+	question_label.current_question = current_question
 	# Reset picked numbers
-	picked_numbers = []
 	for button in picked_container.get_children():
 		button.text = \"?\"
-	result_label.text = \"\"
 
 	target_number = randi_range(target_number_min, target_number_max)
 	target_button.text = str(target_number)
@@ -55,10 +69,10 @@ func generate_question():
 
 	var children = number_container.get_children()
 	var children_count = len(children)
-	
+
 	for i in range(children_count - 2):
 		available_numbers.append(randi_range(1, target_number + 1))
-	
+
 	available_numbers.shuffle()  # Shuffle for randomness
 
 	# Assign numbers to buttons
@@ -66,90 +80,170 @@ func generate_question():
 		var button = number_container.get_child(i)
 		button.text = str(available_numbers[i])
 
-func _on_Submit_Button_pressed():
-	if len(picked_numbers) < 2:
-		result_label.text = \"❌ Pick two numbers!\"
+func _on_Number_Button_pressed(button: Draggable):
+	for num in picked_container.get_children():
+		if num.dragged_item != null:
+			continue
+		num._drop_data(Vector2.ZERO, button)
 		return
-	
-	if picked_numbers[0] + picked_numbers[1] == target_number:
-		result_label.text = \"✅ Correct!\"
+ 
+func _on_Submit_Button_pressed():
+	var numbers : Array[int] = []
+	for num in picked_container.get_children():
+		var children = num.get_children()
+		if not children:
+			return
+		numbers.append(int(children.get(0).text))
+
+	if check_answer(numbers):
+		correct_count += 1
+		result_panel.show_success()
 	else:
-		result_label.text = \"❌ Try Again!\"
+		result_panel.show_error()
+
+func check_answer(numbers : Array[int]) -> bool:
+	var sum : int = 0
+	for num in numbers:
+		sum += num
+
+	return sum == target_number
+
+func _on_results_panel_continue_pressed() -> void:
+	if current_question >= total_question:
+		var game_score : int =  correct_count * 100 / total_question
+		SceneData.params.get_or_add(\"game_score\", game_score)
+		get_tree().change_scene_to_file(game_end_scene)
+		return
+	else:
+		for num in picked_container.get_children():
+			num.emit_signal(\"pressed\")
+		generate_question()
+		result_panel.animate_down()
 "
 
-[node name="CompareNumberGame" type="Control" node_paths=PackedStringArray("target_button", "submit_button", "picked_container", "number_container", "result_label")]
+[node name="CombineNumberGame" type="Control" node_paths=PackedStringArray("target_button", "submit_button", "picked_container", "number_container", "result_panel", "question_label")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = SubResource("GDScript_uop7a")
-target_button = NodePath("TargetNumber")
-submit_button = NodePath("SubmitButton")
-picked_container = NodePath("PickedContainer")
-number_container = NodePath("NumberContainer")
-result_label = NodePath("ResultsPanel")
+script = SubResource("GDScript_pb4k3")
+target_button = NodePath("VBoxContainer/GridContainer/TargetNumber")
+submit_button = NodePath("VBoxContainer/GridContainer/SubmitButton")
+picked_container = NodePath("VBoxContainer/GridContainer/PickedContainer")
+number_container = NodePath("VBoxContainer/GridContainer/HScrollBar/NumberContainer")
+result_panel = NodePath("ResultsPanel")
+question_label = NodePath("QuestionCount")
+game_end_scene = "uid://cb87umn1hif86"
+
+[node name="Background" parent="." instance=ExtResource("1_s818s")]
+layout_mode = 1
 
 [node name="Back_Button" parent="." instance=ExtResource("1_pb4k3")]
 layout_mode = 1
+offset_top = 3.0
+offset_bottom = 53.0
 theme = ExtResource("2_s818s")
 script = ExtResource("3_fluhw")
 target_scene = "uid://dtrqi17ipsnkf"
+scene_params = {
+"page": "game_select"
+}
 
-[node name="PickedContainer" type="HBoxContainer" parent="."]
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = -1
-anchor_left = 0.2
-anchor_top = 0.3
-anchor_right = 0.4
-anchor_bottom = 0.3
+anchor_left = 0.1
+anchor_top = 0.15
+anchor_right = 0.9
+anchor_bottom = 0.9
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 25
+theme_override_constants/separation = 15
 
-[node name="Picked1" type="Button" parent="PickedContainer"]
-custom_minimum_size = Vector2(75, 75)
+[node name="InstructionContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="Label" type="Label" parent="VBoxContainer/InstructionContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("5_fluhw")
+theme_override_font_sizes/font_size = 36
+text = "Pick 2"
+
+[node name="DropTargetButton" type="Button" parent="VBoxContainer/InstructionContainer"]
+custom_minimum_size = Vector2(50, 50)
 layout_mode = 2
 focus_mode = 0
-theme = ExtResource("4_an7g5")
-disabled = true
-script = ExtResource("5_r0jrc")
+theme = ExtResource("2_s818s")
 
-[node name="Picked2" type="Button" parent="PickedContainer"]
-custom_minimum_size = Vector2(75, 75)
+[node name="Label2" type="Label" parent="VBoxContainer/InstructionContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("5_fluhw")
+theme_override_font_sizes/font_size = 36
+text = "that adds up to"
+
+[node name="TargetButton" type="Button" parent="VBoxContainer/InstructionContainer"]
+custom_minimum_size = Vector2(50, 50)
 layout_mode = 2
 focus_mode = 0
-theme = ExtResource("4_an7g5")
-disabled = true
-script = ExtResource("5_r0jrc")
+theme = ExtResource("7_s818s")
 
-[node name="TargetNumber" type="Button" parent="."]
-custom_minimum_size = Vector2(100, 100)
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.75
-anchor_top = 0.3
-anchor_right = 0.75
-anchor_bottom = 0.3
-grow_horizontal = 2
-grow_vertical = 2
-focus_mode = 0
-theme = ExtResource("6_8t42s")
+[node name="GridContainer" type="GridContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+columns = 2
 
-[node name="NumberContainer" type="HBoxContainer" parent="."]
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.15
-anchor_top = 0.6
-anchor_right = 0.85
-anchor_bottom = 0.6
-grow_horizontal = 2
-grow_vertical = 2
+[node name="PickedContainer" type="HBoxContainer" parent="VBoxContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 theme_override_constants/separation = 25
 alignment = 1
 
-[node name="Number1" type="Button" parent="NumberContainer"]
+[node name="Picked1" type="Button" parent="VBoxContainer/GridContainer/PickedContainer"]
+custom_minimum_size = Vector2(75, 75)
+layout_mode = 2
+size_flags_vertical = 8
+focus_mode = 0
+theme = ExtResource("4_an7g5")
+disabled = true
+script = ExtResource("5_pb4k3")
+
+[node name="Picked2" type="Button" parent="VBoxContainer/GridContainer/PickedContainer"]
+custom_minimum_size = Vector2(75, 75)
+layout_mode = 2
+size_flags_vertical = 8
+focus_mode = 0
+theme = ExtResource("4_an7g5")
+disabled = true
+script = ExtResource("5_pb4k3")
+
+[node name="TargetNumber" type="Button" parent="VBoxContainer/GridContainer"]
+custom_minimum_size = Vector2(75, 75)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 8
+focus_mode = 0
+theme = ExtResource("7_s818s")
+
+[node name="HScrollBar" type="ScrollContainer" parent="VBoxContainer/GridContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+size_flags_vertical = 3
+vertical_scroll_mode = 0
+
+[node name="NumberContainer" type="HBoxContainer" parent="VBoxContainer/GridContainer/HScrollBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+size_flags_stretch_ratio = 2.0
+theme_override_constants/separation = 25
+alignment = 1
+
+[node name="Number1" type="Button" parent="VBoxContainer/GridContainer/HScrollBar/NumberContainer"]
 custom_minimum_size = Vector2(75, 75)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -159,7 +253,7 @@ theme = ExtResource("2_s818s")
 theme_override_font_sizes/font_size = 54
 script = ExtResource("7_r28ph")
 
-[node name="Number2" type="Button" parent="NumberContainer"]
+[node name="Number2" type="Button" parent="VBoxContainer/GridContainer/HScrollBar/NumberContainer"]
 custom_minimum_size = Vector2(75, 75)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -169,7 +263,7 @@ theme = ExtResource("2_s818s")
 theme_override_font_sizes/font_size = 54
 script = ExtResource("7_r28ph")
 
-[node name="Number3" type="Button" parent="NumberContainer"]
+[node name="Number3" type="Button" parent="VBoxContainer/GridContainer/HScrollBar/NumberContainer"]
 custom_minimum_size = Vector2(75, 75)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -179,12 +273,22 @@ theme = ExtResource("2_s818s")
 theme_override_font_sizes/font_size = 54
 script = ExtResource("7_r28ph")
 
-[node name="SubmitButton" parent="." instance=ExtResource("8_43gsg")]
-custom_minimum_size = Vector2(150, 50)
-layout_mode = 1
-anchor_top = 0.85
-anchor_bottom = 0.85
-theme_override_font_sizes/font_size = 36
+[node name="Number4" type="Button" parent="VBoxContainer/GridContainer/HScrollBar/NumberContainer"]
+custom_minimum_size = Vector2(75, 75)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+focus_mode = 0
+theme = ExtResource("2_s818s")
+theme_override_font_sizes/font_size = 54
+script = ExtResource("7_r28ph")
+
+[node name="SubmitButton" parent="VBoxContainer/GridContainer" instance=ExtResource("8_43gsg")]
+custom_minimum_size = Vector2(125, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 27
 
 [node name="QuestionCount" parent="." instance=ExtResource("9_h6kap")]
 layout_mode = 1
@@ -199,4 +303,5 @@ offset_bottom = 0.0
 [node name="ResultsPanel" parent="." instance=ExtResource("10_5345o")]
 layout_mode = 1
 
-[connection signal="pressed" from="SubmitButton" to="." method="_on_Submit_Button_pressed"]
+[connection signal="pressed" from="VBoxContainer/GridContainer/SubmitButton" to="." method="_on_Submit_Button_pressed"]
+[connection signal="continue_pressed" from="ResultsPanel" to="." method="_on_results_panel_continue_pressed"]

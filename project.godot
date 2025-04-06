@@ -15,12 +15,13 @@ config/version="1.0"
 run/main_scene="uid://dtrqi17ipsnkf"
 config/features=PackedStringArray("4.4", "GL Compatibility")
 boot_splash/image="uid://dl2wghqs0dk6u"
-config/icon="uid://c00njftlf6e6w"
+config/icon="res://icon.svg"
 boot_splash/minimum_display_time=50
 
 [autoload]
 
 SceneData="*res://scripts/SceneData.gd"
+GameSettings="*res://scripts/game_settings.gd"
 
 [display]
 
@@ -35,6 +36,7 @@ project/assembly_name="MathLab"
 
 [rendering]
 
+textures/canvas_textures/default_texture_filter=0
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 textures/vram_compression/import_etc2_astc=true
