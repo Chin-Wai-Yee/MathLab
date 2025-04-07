@@ -30,6 +30,7 @@ signal continue_pressed()
 var countdown : ProgressBar
 var icon : TextureRect
 var already_pressed : bool = false
+var tween : Tween
 
 func _ready() -> void:
 	self.countdown = $MarginContainer/VBoxContainer/Countdown
@@ -62,17 +63,18 @@ func show_error(label_text : String = "You got it wrong!") -> void:
 
 # Animation
 func animate_up() -> void:
-	var tween = self.create_tween()
+	if self.tween and self.tween.is_running():
+		self.tween.kill()
+	self.tween = self.create_tween()
 	var move_length = self.size.y
 	already_pressed = false
 
 	# Animate up
-	tween\
-		.tween_property(self, "position:y", -move_length, result_panel_lift_time)\
+	var target_position = Vector2(position.x, position.y - move_length)
+	self.tween\
+		.tween_property(self, "position", target_position, result_panel_lift_time)\
 		.set_ease(Tween.EASE_OUT)\
-		.set_trans(Tween.TRANS_BACK)\
-		.as_relative()\
-		.from_current()
+		.set_trans(Tween.TRANS_BACK)
 	
 	if sound_effect == SOUND_EFFECT.SUCCESS:
 		if $Success.is_inside_tree():
@@ -82,7 +84,7 @@ func animate_up() -> void:
 			$Error.play()
 		$Error.play()
 	
-	await tween.finished  # Wait for animation to complete
+	await self.tween.finished  # Wait for animation to complete
 
 	if continue_on_countdown_end > 0:
 		await countdown.start_countdown_await(continue_on_countdown_end)
@@ -90,16 +92,17 @@ func animate_up() -> void:
 			emit_signal("continue_pressed")
 
 func animate_down() -> void:
-	var tween = self.create_tween()
+	if self.tween and self.tween.is_running:
+		self.tween.kill()
+	self.tween = self.create_tween()
 	var move_length = self.size.y
 	# Animate down
-	tween\
-		.tween_property(self, "position:y", move_length, result_panel_lift_time)\
+	var target_position = Vector2(position.x, position.y + move_length)
+	self.tween\
+		.tween_property(self, "position", target_position, result_panel_lift_time)\
 		.set_ease(Tween.EASE_IN)\
-		.set_trans(Tween.TRANS_BACK)\
-		.as_relative()\
-		.from_current()
-	await tween.finished
+		.set_trans(Tween.TRANS_BACK)
+	await self.tween.finished
 
 	if continue_on_countdown_end >= 0:
 		if countdown.tween and countdown.tween.is_running:

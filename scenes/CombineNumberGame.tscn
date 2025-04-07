@@ -110,6 +110,7 @@ func check_answer(numbers : Array[int]) -> bool:
 
 func _on_results_panel_continue_pressed() -> void:
 	if current_question >= total_question:
+		@warning_ignore(\"integer_division\")
 		var game_score : int =  correct_count * 100 / total_question
 		SceneData.params.get_or_add(\"game_score\", game_score)
 		get_tree().change_scene_to_file(game_end_scene)
